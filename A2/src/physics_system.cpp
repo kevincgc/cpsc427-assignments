@@ -124,7 +124,7 @@ void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_h
 			float left_bound = motion.position.x - (get_bounding_box(motion) / 2.f)[0] - offset;
 			float right_bound = motion.position.x + (get_bounding_box(motion) / 2.f)[0] + offset;
 			if (left_bound <= 0 || right_bound >= window_width_px || top_bound <= 0 || bot_bound >= window_height_px) {
-				
+				registry.collisions.emplace_with_duplicates(player_entity, player_entity);
 			}
 			//printf("salmon box: %f, %f\n", left_bound, right_bound);
 		}

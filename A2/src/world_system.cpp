@@ -269,10 +269,6 @@ void WorldSystem::restart_game() {
 	*/
 }
 
-void set_wall_collision_check(bool isClose) {
-	isSalmonCloseToWall = isClose;
-}
-
 // Compute collisions between entities
 void WorldSystem::handle_collisions() {
 	// Loop over all collisions detected by the physics system
@@ -313,39 +309,39 @@ void WorldSystem::handle_collisions() {
 					registry.lightUpTimers.emplace(entity);
 				}
 			}
-		}
-	}
-	if (isSalmonCloseToWall) {
-		int screen_width, screen_height;
-		glfwGetFramebufferSize(window, &screen_width, &screen_height);
-		Motion& motion = registry.motions.get(player_salmon);
-		Transform transform;
-		transform.translate(motion.position);
-		transform.rotate(motion.angle);
-		transform.scale(motion.scale);
-		mat3 projection = renderer->createProjectionMatrix();
-		Mesh& mesh = *(registry.meshPtrs.get(player_salmon));
-		for (const ColoredVertex& v : mesh.vertices) {
-			glm::vec3 transformed_vertex = projection * transform.mat * vec3({ v.position.x, v.position.y, 1.0f });
-			float vertex_x = transformed_vertex.x;
-			float vertex_y = transformed_vertex.y;
-			if ((vertex_x <= -1 && motion.velocity[0] < 0) || (vertex_x >= 1 && motion.velocity[0] > 0)) {
-				motion.velocity[0] = -motion.velocity[0];
-			}
-			if ((vertex_y <= -1 && motion.velocity[1] > 0) || (vertex_y >= 1 && motion.velocity[1] < 0)) {
-				motion.velocity[1] = -motion.velocity[1];
-			}
-			if (vertex_x < -1) {
-				motion.position.x += (-1 - vertex_x) / 2.f * screen_width;
-			}
-			if (vertex_x > 1) {
-				motion.position.x -= (vertex_x - 1) / 2.f * screen_width;
-			}
-			if (vertex_y < -1) {
-				motion.position.y -= (-1 - vertex_y) / 2.f * screen_height;
-			}
-			if (vertex_y > 1) {
-				motion.position.y += (vertex_y - 1) / 2.f * screen_height;
+			else if (entity_other == entity) {
+				int screen_width, screen_height;
+				glfwGetFramebufferSize(window, &screen_width, &screen_height);
+				Motion& motion = registry.motions.get(player_salmon);
+				Transform transform;
+				transform.translate(motion.position);
+				transform.rotate(motion.angle);
+				transform.scale(motion.scale);
+				mat3 projection = renderer->createProjectionMatrix();
+				Mesh& mesh = *(registry.meshPtrs.get(player_salmon));
+				for (const ColoredVertex& v : mesh.vertices) {
+					glm::vec3 transformed_vertex = projection * transform.mat * vec3({ v.position.x, v.position.y, 1.0f });
+					float vertex_x = transformed_vertex.x;
+					float vertex_y = transformed_vertex.y;
+					if ((vertex_x <= -1 && motion.velocity[0] < 0) || (vertex_x >= 1 && motion.velocity[0] > 0)) {
+						motion.velocity[0] = -motion.velocity[0];
+					}
+					if ((vertex_y <= -1 && motion.velocity[1] > 0) || (vertex_y >= 1 && motion.velocity[1] < 0)) {
+						motion.velocity[1] = -motion.velocity[1];
+					}
+					if (vertex_x < -1) {
+						motion.position.x += (-1 - vertex_x) / 2.f * screen_width;
+					}
+					if (vertex_x > 1) {
+						motion.position.x -= (vertex_x - 1) / 2.f * screen_width;
+					}
+					if (vertex_y < -1) {
+						motion.position.y -= (-1 - vertex_y) / 2.f * screen_height;
+					}
+					if (vertex_y > 1) {
+						motion.position.y += (vertex_y - 1) / 2.f * screen_height;
+					}
+				}
 			}
 		}
 	}
