@@ -1,6 +1,7 @@
 // internal
 #include "physics_system.hpp"
 #include "world_init.hpp"
+#include "render_system.hpp"
 
 // Returns the local bounding coordinates scaled by the current size of the entity
 vec2 get_bounding_box(const Motion& motion)
@@ -115,26 +116,15 @@ void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_h
 			if (top_bound <= 0 || bot_bound >= window_height_px) {
 				motion.velocity[1] = -motion.velocity[1];
 			}
-			//printf("bounding box: %f, %f\n", (get_bounding_box(motion) / 2.f)[0], (get_bounding_box(motion) / 2.f)[1]);
 		}
 		else {
-			
-			float top_bound = motion.position.y - (get_bounding_box(motion) / 2.f)[1];
-			float bot_bound = motion.position.y + (get_bounding_box(motion) / 2.f)[1];
-			float left_bound = motion.position.x - (get_bounding_box(motion) / 2.f)[0];
-			float right_bound = motion.position.x + (get_bounding_box(motion) / 2.f)[0];
 			int offset = 50;
-			if (left_bound <= offset || right_bound >= window_width_px - offset || top_bound <= offset || bot_bound >= window_height_px - offset) {
-				Mesh& mesh = *(registry.meshPtrs.get(player_entity));
-				for (const ColoredVertex& v : mesh.vertices) {
-					if (v.position.x <= 0 || v.position.x >= window_width_px) {
-						motion.velocity[0] = -motion.velocity[0];
-					}
-					if (v.position.y <= 0 || v.position.y >= window_height_px) {
-						motion.velocity[1] = -motion.velocity[1];
-					}
-					//printf("salmon box: %f, %f\n", left_bound, right_bound);
-				}
+			float top_bound = motion.position.y - (get_bounding_box(motion) / 2.f)[1] - offset;
+			float bot_bound = motion.position.y + (get_bounding_box(motion) / 2.f)[1] + offset;
+			float left_bound = motion.position.x - (get_bounding_box(motion) / 2.f)[0] - offset;
+			float right_bound = motion.position.x + (get_bounding_box(motion) / 2.f)[0] + offset;
+			if (left_bound <= 0 || right_bound >= window_width_px || top_bound <= 0 || bot_bound >= window_height_px) {
+				
 			}
 			//printf("salmon box: %f, %f\n", left_bound, right_bound);
 		}

@@ -37,6 +37,8 @@ public:
 
 	// Should the game be over ?
 	bool is_over()const;
+
+	void set_wall_collision_check(bool isClose);
 private:
 	// Input callback functions
 	void on_key(int key, int, int action, int mod);
@@ -66,4 +68,6 @@ private:
 	// C++ random number generator
 	std::default_random_engine rng;
 	std::uniform_real_distribution<float> uniform_dist; // number between 0..1
+
+	bool isSalmonCloseToWall = false;
 };

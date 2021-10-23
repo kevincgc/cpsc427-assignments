@@ -36,6 +36,7 @@ bool RenderSystem::init(int width, int height, GLFWwindow* window_arg)
 	int fb_width, fb_height;
 	glfwGetFramebufferSize(window, &fb_width, &fb_height);
 	screen_scale = static_cast<float>(fb_width) / width;
+	printf("%f\n", screen_scale);
 	(int)height; // dummy to avoid warning
 
 	// ASK(Camilo): Setup error callback. This can not be done in mac os, so do not enable

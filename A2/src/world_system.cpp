@@ -182,7 +182,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		motion.position =
 			vec2(screen_width + 100.f,
 				50.f + uniform_dist(rng) * (screen_height - 100.f));
-		motion.velocity = vec2(-200.f, -200.f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (400.f))));
+		motion.velocity = vec2(-200.f, -200.f + (rand() / static_cast <float> (RAND_MAX)) * 400);
 	}
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -269,6 +269,10 @@ void WorldSystem::restart_game() {
 	*/
 }
 
+void set_wall_collision_check(bool isClose) {
+	isSalmonCloseToWall = isClose;
+}
+
 // Compute collisions between entities
 void WorldSystem::handle_collisions() {
 	// Loop over all collisions detected by the physics system
@@ -311,7 +315,54 @@ void WorldSystem::handle_collisions() {
 			}
 		}
 	}
-
+	if (isSalmonCloseToWall) {
+		int screen_width, screen_height;
+		glfwGetFramebufferSize(window, &screen_width, &screen_height);
+		Motion& motion = registry.motions.get(player_salmon);
+		Transform transform;
+		transform.translate(motion.position);
+		transform.rotate(motion.angle);
+		transform.scale(motion.scale);
+		mat3 projection = renderer->createProjectionMatrix();
+		Mesh& mesh = *(registry.meshPtrs.get(player_salmon));
+		for (const ColoredVertex& v : mesh.vertices) {
+			glm::vec3 transformed_vertex = projection * transform.mat * vec3({ v.position.x, v.position.y, 1.0f });
+			float vertex_x = transformed_vertex.x;
+			float vertex_y = transformed_vertex.y;
+			if ((vertex_x <= -1 && motion.velocity[0] < 0) || (vertex_x >= 1 && motion.velocity[0] > 0)) {
+				motion.velocity[0] = -motion.velocity[0];
+			}
+			if ((vertex_y <= -1 && motion.velocity[1] > 0) || (vertex_y >= 1 && motion.velocity[1] < 0)) {
+				motion.velocity[1] = -motion.velocity[1];
+			}
+			if (vertex_x < -1) {
+				motion.position.x += (-1 - vertex_x) / 2.f * screen_width;
+			}
+			if (vertex_x > 1) {
+				motion.position.x -= (vertex_x - 1) / 2.f * screen_width;
+			}
+			if (vertex_y < -1) {
+				motion.position.y -= (-1 - vertex_y) / 2.f * screen_height;
+			}
+			if (vertex_y > 1) {
+				motion.position.y += (vertex_y - 1) / 2.f * screen_height;
+			}
+		}
+	}
+	//mat3 projection1 = renderer->createProjectionMatrix();
+	//
+	//Entity& player_entity = registry.players.entities[0];
+	//Motion& motion = registry.motions.get(player_entity);
+	//Transform transform;
+	//transform.translate(motion.position);
+	////transform.rotate(motion.angle);
+	////transform.scale(motion.scale);
+	//mat3 projection = projection1 * transform.mat;
+	////printf("x: %f, y: %f, z: %f\n", motion.position.x, motion.position.y, projection[2][2]);
+	////printf("x: %f, y: %f, z: %f\n", projection[0][0], projection[1][1], projection[2][2]);
+	//printf("x: %f, y: %f, z: %f\n", projection[0][0], projection[0][1], projection[0][2]);
+	//printf("x: %f, y: %f, z: %f\n", projection[1][0], projection[1][1], projection[1][2]);
+	//printf("x: %f, y: %f, z: %f\n", projection[2][0], projection[2][1], projection[2][2]);
 	// Remove all collisions from this simulation step
 	registry.collisions.clear();
 }
