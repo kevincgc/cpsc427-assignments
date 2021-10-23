@@ -1,11 +1,55 @@
 // internal
 #include "physics_system.hpp"
 #include "world_init.hpp"
-#include "render_system.hpp"
+
+float window_width_px;
+float window_height_px; 
+RenderSystem* renderer;
+
+vec4 get_bounding_box_and_center(const Motion& motion) {
+	Entity& player_entity = registry.players.entities[0];
+	if (&(registry.motions.get(player_entity)) == &motion) {
+		Transform transform;
+		transform.translate(motion.position);
+		transform.rotate(motion.angle);
+		transform.scale(motion.scale);
+		mat3 projection = renderer->createProjectionMatrix();
+		Mesh& mesh = *(registry.meshPtrs.get(player_entity));
+		float leftBound = 1, rightBound = -1, topBound = -1, botBound = 1;
+		for (const ColoredVertex& v : mesh.vertices) {
+			glm::vec3 transformed_vertex = projection * transform.mat * vec3({ v.position.x, v.position.y, 1.0f });
+			float vertex_x = transformed_vertex.x;
+			float vertex_y = transformed_vertex.y;
+			if (vertex_x < leftBound) {
+				leftBound = vertex_x;
+			}
+			if (vertex_x > rightBound) {
+				rightBound = vertex_x;
+			}
+			if (vertex_y < botBound) {
+				botBound = vertex_y;
+			}
+			if (vertex_y > topBound) {
+				topBound = vertex_y;
+			}
+		}
+		float bounding_box_width = ((rightBound - leftBound) / 2.f) * window_width_px;
+		float bounding_box_height = ((topBound - botBound) / 2.f) * window_height_px;
+		float center_x = (((leftBound + rightBound) / 2.f) + 1) / 2.f * window_width_px;
+		float center_y = (1 - (((botBound + topBound) / 2.f) + 1) / 2.f) * window_height_px;
+		return { bounding_box_width, bounding_box_height, center_x, center_y };
+	}
+	return { 0, 0, 0, 0 };
+}
 
 // Returns the local bounding coordinates scaled by the current size of the entity
 vec2 get_bounding_box(const Motion& motion)
 {
+	Entity& player_entity = registry.players.entities[0];
+	if (&(registry.motions.get(player_entity)) == &motion) {
+		vec4 mat = get_bounding_box_and_center(motion);
+		return { mat.x, mat.y };
+	}
 	// abs is to avoid negative scale due to the facing direction.
 	return { abs(motion.scale.x), abs(motion.scale.y) };
 }
@@ -35,8 +79,15 @@ float calcDragDeceleration(const Motion& motion, float area = 0.03235840433, flo
 	return dragF / mass;
 }
 
-void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_height_px)
+void setValues(float w, float h, RenderSystem* r) {
+	window_width_px = w;
+	window_height_px = h;
+	renderer = r;
+}
+
+void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_height_px, RenderSystem* renderer)
 {
+	setValues(window_width_px, window_height_px, renderer);
 	Entity& player_entity = registry.players.entities[0];
 	// Move fish based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
@@ -118,15 +169,44 @@ void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_h
 			}
 		}
 		else {
-			int offset = 50;
-			float top_bound = motion.position.y - (get_bounding_box(motion) / 2.f)[1] - offset;
-			float bot_bound = motion.position.y + (get_bounding_box(motion) / 2.f)[1] + offset;
-			float left_bound = motion.position.x - (get_bounding_box(motion) / 2.f)[0] - offset;
-			float right_bound = motion.position.x + (get_bounding_box(motion) / 2.f)[0] + offset;
+			vec4 bounding_box_and_center = get_bounding_box_and_center(motion);
+			vec2 bounding_box = { bounding_box_and_center[0], bounding_box_and_center[1] };
+			vec2 center = { bounding_box_and_center[2], bounding_box_and_center[3] };
+			float top_bound = motion.position.y - bounding_box[1] / 2;
+			float bot_bound = motion.position.y + bounding_box[1] / 2;
+			float left_bound = motion.position.x - bounding_box[0] / 2;
+			float right_bound = motion.position.x + bounding_box[0] / 2;
 			if (left_bound <= 0 || right_bound >= window_width_px || top_bound <= 0 || bot_bound >= window_height_px) {
-				registry.collisions.emplace_with_duplicates(player_entity, player_entity);
+				Transform transform;
+				transform.translate(motion.position);
+				transform.rotate(motion.angle);
+				transform.scale(motion.scale);
+				mat3 projection = renderer->createProjectionMatrix();
+				Mesh& mesh = *(registry.meshPtrs.get(player_entity));
+				for (const ColoredVertex& v : mesh.vertices) {
+					glm::vec3 transformed_vertex = projection * transform.mat * vec3({ v.position.x, v.position.y, 1.0f });
+					float vertex_x = transformed_vertex.x;
+					float vertex_y = transformed_vertex.y;
+					if ((vertex_x <= -1 && motion.velocity[0] < 0) || (vertex_x >= 1 && motion.velocity[0] > 0)) {
+						motion.velocity[0] = -motion.velocity[0];
+					}
+					if ((vertex_y <= -1 && motion.velocity[1] > 0) || (vertex_y >= 1 && motion.velocity[1] < 0)) {
+						motion.velocity[1] = -motion.velocity[1];
+					}
+					if (vertex_x < -1) {
+						motion.position.x += (-1 - vertex_x) / 2.f * window_width_px;
+					}
+					if (vertex_x > 1) {
+						motion.position.x -= (vertex_x - 1) / 2.f * window_width_px;
+					}
+					if (vertex_y < -1) {
+						motion.position.y -= (-1 - vertex_y) / 2.f * window_height_px;
+					}
+					if (vertex_y > 1) {
+						motion.position.y += (vertex_y - 1) / 2.f * window_height_px;
+					}
+				}
 			}
-			//printf("salmon box: %f, %f\n", left_bound, right_bound);
 		}
 	}
 	// you may need the following quantities to compute wall positions
@@ -146,14 +226,43 @@ void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_h
 		{
 			Motion& motion_i = motion_container.components[i];
 			Entity entity_i = motion_container.entities[i];
-
 			// visualize the radius with two axis-aligned lines
 			const vec2 bonding_box = get_bounding_box(motion_i);
+			if (entity_i != player_entity) {
+				Entity lineLeft = createLine(motion_i.position - vec2({ bonding_box.x / 2, 0 }), vec2({ motion_i.scale.x / 30, bonding_box.y }));
+				Entity lineRight = createLine(motion_i.position + vec2({ bonding_box.x / 2, 0 }), vec2({ motion_i.scale.x / 30, bonding_box.y }));
+				Entity lineTop = createLine(motion_i.position - vec2({ 0, bonding_box.y / 2 }), vec2({ bonding_box.x, motion_i.scale.x / 30 }));
+				Entity lineBot = createLine(motion_i.position + vec2({ 0, bonding_box.y / 2 }), vec2({ bonding_box.x, motion_i.scale.x / 30 }));
+			}
+			else {
+				Transform transform;
+				transform.translate(motion_i.position);
+				transform.rotate(motion_i.angle);
+				transform.scale(motion_i.scale);
+				mat3 projection = renderer->createProjectionMatrix();
+				Mesh& mesh = *(registry.meshPtrs.get(entity_i));
+				float leftBound = 1, rightBound = -1, topBound = -1, botBound = 1;
+				for (const ColoredVertex& v : mesh.vertices) {
+					glm::vec3 transformed_vertex = projection * transform.mat * vec3({ v.position.x, v.position.y, 1.0f });
+					float vertex_x = transformed_vertex.x;
+					float vertex_y = transformed_vertex.y;
+					Entity vertex = createLine(vec2({ ((vertex_x + 1) / 2.f) * window_width_px, (1 - ((vertex_y + 1) / 2.f)) * window_height_px }),
+						vec2({ motion_i.scale.x / 25, motion_i.scale.x / 25 }));
+				}
+				vec4 bounding_box_and_center = get_bounding_box_and_center(motion_i);
+				vec2 bounding_box = { bounding_box_and_center[0], bounding_box_and_center[1] };
+				vec2 center = { bounding_box_and_center[2], bounding_box_and_center[3] };
+				Entity lineLeft = createLine(center - vec2({ bounding_box.x / 2.f, 0 }), { motion_i.scale.x / 30, bounding_box.y });
+				Entity lineRight = createLine(center + vec2({ bounding_box.x / 2.f, 0 }), { motion_i.scale.x / 30, bounding_box.y });
+				Entity lineTop = createLine(center - vec2({ 0, bounding_box.y / 2 }), { bounding_box.x, motion_i.scale.x / 30 });
+				Entity lineBot = createLine(center + vec2({ 0, bounding_box.y / 2 }), { bounding_box.x, motion_i.scale.x / 30 });
+			}
+			/*const vec2 bonding_box = get_bounding_box(motion_i);
 			float radius = sqrt(dot(bonding_box/2.f, bonding_box/2.f));
 			vec2 line_scale1 = { motion_i.scale.x / 10, 2*radius };
 			Entity line1 = createLine(motion_i.position, line_scale1);
 			vec2 line_scale2 = { 2*radius, motion_i.scale.x / 10};
-			Entity line2 = createLine(motion_i.position, line_scale2);
+			Entity line2 = createLine(motion_i.position, line_scale2);*/
 
 			// !!! TODO A2: implement debugging of bounding boxes and mesh
 		}

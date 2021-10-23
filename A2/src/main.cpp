@@ -53,7 +53,7 @@ int main()
 
 		world.step(elapsed_ms);
 		ai.step(elapsed_ms);
-		physics.step(elapsed_ms, window_width_px, window_height_px);
+		physics.step(elapsed_ms, window_width_px, window_height_px, &renderer);
 		world.handle_collisions();
 
 		renderer.draw();
