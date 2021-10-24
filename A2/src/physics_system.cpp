@@ -3,53 +3,12 @@
 #include "world_init.hpp"
 
 float window_width_px;
-float window_height_px; 
+float window_height_px;
 RenderSystem* renderer;
-
-vec4 get_bounding_box_and_center(const Motion& motion) {
-	Entity& player_entity = registry.players.entities[0];
-	if (&(registry.motions.get(player_entity)) == &motion) {
-		Transform transform;
-		transform.translate(motion.position);
-		transform.rotate(motion.angle);
-		transform.scale(motion.scale);
-		mat3 projection = renderer->createProjectionMatrix();
-		Mesh& mesh = *(registry.meshPtrs.get(player_entity));
-		float leftBound = 1, rightBound = -1, topBound = -1, botBound = 1;
-		for (const ColoredVertex& v : mesh.vertices) {
-			glm::vec3 transformed_vertex = projection * transform.mat * vec3({ v.position.x, v.position.y, 1.0f });
-			float vertex_x = transformed_vertex.x;
-			float vertex_y = transformed_vertex.y;
-			if (vertex_x < leftBound) {
-				leftBound = vertex_x;
-			}
-			if (vertex_x > rightBound) {
-				rightBound = vertex_x;
-			}
-			if (vertex_y < botBound) {
-				botBound = vertex_y;
-			}
-			if (vertex_y > topBound) {
-				topBound = vertex_y;
-			}
-		}
-		float bounding_box_width = ((rightBound - leftBound) / 2.f) * window_width_px;
-		float bounding_box_height = ((topBound - botBound) / 2.f) * window_height_px;
-		float center_x = (((leftBound + rightBound) / 2.f) + 1) / 2.f * window_width_px;
-		float center_y = (1 - (((botBound + topBound) / 2.f) + 1) / 2.f) * window_height_px;
-		return { bounding_box_width, bounding_box_height, center_x, center_y };
-	}
-	return { 0, 0, 0, 0 };
-}
 
 // Returns the local bounding coordinates scaled by the current size of the entity
 vec2 get_bounding_box(const Motion& motion)
 {
-	Entity& player_entity = registry.players.entities[0];
-	if (&(registry.motions.get(player_entity)) == &motion) {
-		vec4 mat = get_bounding_box_and_center(motion);
-		return { mat.x, mat.y };
-	}
 	// abs is to avoid negative scale due to the facing direction.
 	return { abs(motion.scale.x), abs(motion.scale.y) };
 }
@@ -60,7 +19,7 @@ vec2 get_bounding_box(const Motion& motion)
 bool collides(const Motion& motion1, const Motion& motion2)
 {
 	vec2 dp = motion1.position - motion2.position;
-	float dist_squared = dot(dp,dp);
+	float dist_squared = dot(dp, dp);
 	const vec2 other_bonding_box = get_bounding_box(motion1) / 2.f;
 	const float other_r_squared = dot(other_bonding_box, other_bonding_box);
 	const vec2 my_bonding_box = get_bounding_box(motion2) / 2.f;
@@ -93,7 +52,7 @@ void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_h
 	// having entities move at different speed based on the machine.
 	auto& motion_registry = registry.motions;
 	float step_seconds = 1.0f * (elapsed_ms / 1000.f);
-	for(uint i = 0; i< motion_registry.size(); i++)
+	for (uint i = 0; i < motion_registry.size(); i++)
 	{
 		// !!! DONE A1: update motion.position based on step_seconds and motion.velocity
 		Motion& motion = motion_registry.components[i];
@@ -131,12 +90,12 @@ void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_h
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	// Check for collisions between all moving entities
-    ComponentContainer<Motion> &motion_container = registry.motions;
-	for(uint i = 0; i<motion_container.components.size(); i++)
+	ComponentContainer<Motion>& motion_container = registry.motions;
+	for (uint i = 0; i < motion_container.components.size(); i++)
 	{
 		Motion& motion_i = motion_container.components[i];
 		Entity entity_i = motion_container.entities[i];
-		for(uint j = 0; j<motion_container.components.size(); j++) // i+1
+		for (uint j = 0; j < motion_container.components.size(); j++) // i+1
 		{
 			if (i == j)
 				continue;
@@ -169,13 +128,11 @@ void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_h
 			}
 		}
 		else {
-			vec4 bounding_box_and_center = get_bounding_box_and_center(motion);
-			vec2 bounding_box = { bounding_box_and_center[0], bounding_box_and_center[1] };
-			vec2 center = { bounding_box_and_center[2], bounding_box_and_center[3] };
-			float top_bound = center.y - bounding_box[1] / 2;
-			float bot_bound = center.y + bounding_box[1] / 2;
-			float left_bound = center.x - bounding_box[0] / 2;
-			float right_bound = center.x + bounding_box[0] / 2;
+			vec2 bounding_box = get_bounding_box(motion);
+			float top_bound = motion.position.y - bounding_box[1];
+			float bot_bound = motion.position.y + bounding_box[1];
+			float left_bound = motion.position.x - bounding_box[0];
+			float right_bound = motion.position.x + bounding_box[0];
 			if (left_bound <= 0 || right_bound >= window_width_px || top_bound <= 0 || bot_bound >= window_height_px) {
 				Transform transform;
 				transform.translate(motion.position);
@@ -248,10 +205,25 @@ void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_h
 					float vertex_y = transformed_vertex.y;
 					Entity vertex = createLine(vec2({ ((vertex_x + 1) / 2.f) * window_width_px, (1 - ((vertex_y + 1) / 2.f)) * window_height_px }),
 						vec2({ motion_i.scale.x / 25, motion_i.scale.x / 25 }));
+					if (vertex_x < leftBound) {
+						leftBound = vertex_x;
+					}
+					if (vertex_x > rightBound) {
+						rightBound = vertex_x;
+					}
+					if (vertex_y < botBound) {
+						botBound = vertex_y;
+					}
+					if (vertex_y > topBound) {
+						topBound = vertex_y;
+					}
 				}
-				vec4 bounding_box_and_center = get_bounding_box_and_center(motion_i);
-				vec2 bounding_box = { bounding_box_and_center[0], bounding_box_and_center[1] };
-				vec2 center = { bounding_box_and_center[2], bounding_box_and_center[3] };
+				float center_x = (((leftBound + rightBound) / 2.f) + 1) / 2.f * window_width_px;
+				float center_y = (1 - (((botBound + topBound) / 2.f) + 1) / 2.f) * window_height_px;
+				vec2 center = { center_x, center_y };
+				float bounding_box_width = ((rightBound - leftBound) / 2.f) * window_width_px;
+				float bounding_box_height = ((topBound - botBound) / 2.f) * window_height_px;
+				vec2 bounding_box = { bounding_box_width, bounding_box_height };
 				Entity lineLeft = createLine(center - vec2({ bounding_box.x / 2.f, 0 }), { motion_i.scale.x / 30, bounding_box.y });
 				Entity lineRight = createLine(center + vec2({ bounding_box.x / 2.f, 0 }), { motion_i.scale.x / 30, bounding_box.y });
 				Entity lineTop = createLine(center - vec2({ 0, bounding_box.y / 2 }), { bounding_box.x, motion_i.scale.x / 30 });
