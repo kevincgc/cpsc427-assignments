@@ -58,3 +58,4 @@ bool gl_has_errors()
 }
 
 bool is_advanced_controls = 1;
+bool is_ai_debug_freeze = 0;

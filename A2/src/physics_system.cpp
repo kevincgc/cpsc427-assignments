@@ -172,10 +172,10 @@ void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_h
 			vec4 bounding_box_and_center = get_bounding_box_and_center(motion);
 			vec2 bounding_box = { bounding_box_and_center[0], bounding_box_and_center[1] };
 			vec2 center = { bounding_box_and_center[2], bounding_box_and_center[3] };
-			float top_bound = motion.position.y - bounding_box[1] / 2;
-			float bot_bound = motion.position.y + bounding_box[1] / 2;
-			float left_bound = motion.position.x - bounding_box[0] / 2;
-			float right_bound = motion.position.x + bounding_box[0] / 2;
+			float top_bound = center.y - bounding_box[1] / 2;
+			float bot_bound = center.y + bounding_box[1] / 2;
+			float left_bound = center.x - bounding_box[0] / 2;
+			float right_bound = center.x + bounding_box[0] / 2;
 			if (left_bound <= 0 || right_bound >= window_width_px || top_bound <= 0 || bot_bound >= window_height_px) {
 				Transform transform;
 				transform.translate(motion.position);
