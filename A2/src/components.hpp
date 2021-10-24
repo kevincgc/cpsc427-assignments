@@ -19,7 +19,12 @@ struct HardShell
 // Fish and Salmon have a soft shell
 struct SoftShell
 {
-
+	enum SoftShellAiState {
+		NORMAL,
+		DODGING
+	};
+	vec2 velocity_prev = { 0, 0 };
+	SoftShellAiState state = NORMAL;
 };
 
 // All data relevant to the shape and motion of entities

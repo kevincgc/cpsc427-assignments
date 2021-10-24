@@ -6,6 +6,8 @@
 #include "tiny_ecs_registry.hpp"
 #include "render_system.hpp"
 
+vec2 get_bounding_box(const Motion& motion);
+
 // A simple physics system that moves rigid bodies and checks for collision
 class PhysicsSystem
 {

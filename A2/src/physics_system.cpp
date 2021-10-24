@@ -2,10 +2,6 @@
 #include "physics_system.hpp"
 #include "world_init.hpp"
 
-float window_width_px;
-float window_height_px;
-RenderSystem* renderer;
-
 // Returns the local bounding coordinates scaled by the current size of the entity
 vec2 get_bounding_box(const Motion& motion)
 {
@@ -38,15 +34,8 @@ float calcDragDeceleration(const Motion& motion, float area = 0.03235840433, flo
 	return dragF / mass;
 }
 
-void setValues(float w, float h, RenderSystem* r) {
-	window_width_px = w;
-	window_height_px = h;
-	renderer = r;
-}
-
 void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_height_px, RenderSystem* renderer)
 {
-	setValues(window_width_px, window_height_px, renderer);
 	Entity& player_entity = registry.players.entities[0];
 	// Move fish based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
