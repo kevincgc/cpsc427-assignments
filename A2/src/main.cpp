@@ -51,12 +51,12 @@ int main()
 			(float)(std::chrono::duration_cast<std::chrono::microseconds>(now - t)).count() / 1000;
 		t = now;
 
-		ai.step(elapsed_ms);
 		if (!is_ai_debug_freeze) {
 			world.step(elapsed_ms);
 			physics.step(elapsed_ms, window_width_px, window_height_px, &renderer);
 			world.handle_collisions();
 		}
+		ai.step(elapsed_ms);
 
 		renderer.draw();
 

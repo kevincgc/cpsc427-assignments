@@ -419,7 +419,7 @@ void WorldSystem::on_mouse_move(vec2 mouse_position) {
 	// default facing direction is (1, 0)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	Entity entity = registry.players.entities[0];
-	if (!registry.deathTimers.has(entity)) {
+	if (!registry.deathTimers.has(entity) && !is_ai_debug_freeze) {
 		Motion& motion = registry.motions.get(player_salmon);
 		float x_diff = mouse_position[0] - motion.position[0];
 		float y_diff = mouse_position[1] - motion.position[1];

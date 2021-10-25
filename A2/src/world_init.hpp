@@ -17,7 +17,7 @@ Entity createFish(RenderSystem* renderer, vec2 position);
 // the enemy
 Entity createTurtle(RenderSystem* renderer, vec2 position);
 // a red line for debugging purposes
-Entity createLine(vec2 position, vec2 size);
+Entity createLine(vec2 position, vec2 size, float angle = 0.f);
 // a pebble
 Entity createPebble(vec2 pos, vec2 size);
 

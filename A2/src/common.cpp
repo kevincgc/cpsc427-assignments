@@ -59,4 +59,5 @@ bool gl_has_errors()
 
 bool is_advanced_controls = 1;
 bool is_ai_debug_freeze = 0;
-int epsilon = 100;
+int epsilon = 400;
+int ai_debug_freeze_num_frames = 20;

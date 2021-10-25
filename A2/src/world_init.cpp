@@ -47,7 +47,8 @@ Entity createFish(RenderSystem* renderer, vec2 position)
 	motion.scale = vec2({ -FISH_BB_WIDTH, FISH_BB_HEIGHT });
 
 	// Create an (empty) Fish component to be able to refer to all fish
-	registry.softShells.emplace(entity);
+	auto& softshell = registry.softShells.emplace(entity);
+	softshell.state = SoftShell::NORMAL;
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::FISH,
@@ -85,7 +86,7 @@ Entity createTurtle(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createLine(vec2 position, vec2 scale)
+Entity createLine(vec2 position, vec2 scale, float angle)
 {
 	Entity entity = Entity();
 
@@ -98,7 +99,7 @@ Entity createLine(vec2 position, vec2 scale)
 
 	// Create motion
 	Motion& motion = registry.motions.emplace(entity);
-	motion.angle = 0.f;
+	motion.angle = angle;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 	motion.scale = scale;
