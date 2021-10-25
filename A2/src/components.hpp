@@ -21,10 +21,12 @@ struct SoftShell
 {
 	enum AiState {
 		NORMAL,
+		UPDATING,
 		DODGING
 	};
 	vec2 velocity_prev = { 0, 0 };
 	AiState state = NORMAL;
+	int update_frame_counter = 0;
 };
 
 // All data relevant to the shape and motion of entities
@@ -50,6 +52,9 @@ struct Collision
 struct Debug {
 	bool in_debug_mode = 0;
 	bool in_freeze_mode = 0;
+	bool is_advanced_controls = 1;
+	int ai_update_every_X_frames = 30;
+	bool is_advance_ai = 0;
 };
 extern Debug debugging;
 

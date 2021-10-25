@@ -193,7 +193,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	// Processing the salmon state
 	assert(registry.screenStates.components.size() <= 1);
 	ScreenState& screen = registry.screenStates.components[0];
-	if (is_advanced_controls) {
+	if (debugging.is_advanced_controls) {
 		double xpos, ypos;
 		glfwGetCursorPos(wndptr, &xpos, &ypos);
 		on_mouse_move({ xpos, ypos });
@@ -331,7 +331,7 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	float salmon_vel = 250;
 	Motion& motion = registry.motions.get(player_salmon);
 	Entity entity = registry.players.entities[0];
-	if (!registry.deathTimers.has(entity) && !is_advanced_controls) {
+	if (!registry.deathTimers.has(entity) && !debugging.is_advanced_controls) {
 		if (action == GLFW_PRESS && key == GLFW_KEY_LEFT) {
 			motion.velocity[0] = -1 * salmon_vel;
 		}
@@ -364,7 +364,7 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 			motion.velocity[1] = 0;
 		}
 	}
-	else if (!registry.deathTimers.has(entity) && is_advanced_controls) {
+	else if (!registry.deathTimers.has(entity) && debugging.is_advanced_controls) {
 		if (action == GLFW_PRESS && key == GLFW_KEY_UP) {
 			motion.is_swimming = 1;
 		}
@@ -380,11 +380,31 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	}
 
 	if (action == GLFW_PRESS && key == GLFW_KEY_B) {
-		is_advanced_controls = 0;
+		debugging.is_advanced_controls = !debugging.is_advanced_controls;
 	}
 
 	if (action == GLFW_PRESS && key == GLFW_KEY_A) {
-		is_advanced_controls = 1;
+		std::string b = "Using Basic AI (A2 mandatory part).";
+		std::string a = "Using Advance AI (A2 creative part, option #1).";
+		debugging.is_advance_ai = !debugging.is_advance_ai;
+		printf("%s\n", debugging.is_advance_ai ? a.c_str() : b.c_str());
+	}
+
+	int FRAME_CHANGE = 10;
+
+	if (action == GLFW_PRESS && key == GLFW_KEY_EQUAL) {
+		debugging.ai_update_every_X_frames += FRAME_CHANGE;
+		printf("Updating AI path every %i frames\n", debugging.ai_update_every_X_frames);
+	}
+
+	if (action == GLFW_PRESS && key == GLFW_KEY_MINUS) {
+		if (debugging.ai_update_every_X_frames >= FRAME_CHANGE) {
+			debugging.ai_update_every_X_frames -= FRAME_CHANGE;
+		}
+		else {
+			debugging.ai_update_every_X_frames = 0;
+		}
+		printf("Updating AI path every %i frames\n", debugging.ai_update_every_X_frames);
 	}
 
 	// Resetting game
@@ -419,7 +439,7 @@ void WorldSystem::on_mouse_move(vec2 mouse_position) {
 	// default facing direction is (1, 0)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	Entity entity = registry.players.entities[0];
-	if (!registry.deathTimers.has(entity) && !is_ai_debug_freeze) {
+	if (!registry.deathTimers.has(entity) && !debugging.in_freeze_mode) {
 		Motion& motion = registry.motions.get(player_salmon);
 		float x_diff = mouse_position[0] - motion.position[0];
 		float y_diff = mouse_position[1] - motion.position[1];

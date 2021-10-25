@@ -45,7 +45,3 @@ struct Transform {
 };
 
 bool gl_has_errors();
-extern bool is_advanced_controls;
-extern bool is_ai_debug_freeze;
-extern int epsilon;
-extern int ai_debug_freeze_num_frames;

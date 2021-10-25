@@ -52,7 +52,7 @@ void PhysicsSystem::step(float elapsed_ms, float window_width_px, float window_h
 		// (void)elapsed_ms; // placeholder to silence unused warning until implemented
 	}
 	// Simulate acceleration and drag using advanced controls, only for salmon
-	if (is_advanced_controls && !registry.deathTimers.has(player_entity)) {
+	if (debugging.is_advanced_controls && !registry.deathTimers.has(player_entity)) {
 		Motion& motion = registry.motions.get(player_entity);
 		const float swimming_acceleration = 250;
 		float velVectorLength = sqrt((motion.velocity[0] * motion.velocity[0]) + (motion.velocity[1] * motion.velocity[1]));
