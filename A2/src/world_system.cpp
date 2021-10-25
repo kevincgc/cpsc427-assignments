@@ -380,14 +380,15 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	}
 
 	if (action == GLFW_PRESS && key == GLFW_KEY_B) {
-		debugging.is_advanced_controls = !debugging.is_advanced_controls;
+		std::string b = "Using Basic AI (A2 mandatory part).";
+		debugging.is_advance_ai = false;
+		printf("%s\n", b.c_str());
 	}
 
 	if (action == GLFW_PRESS && key == GLFW_KEY_A) {
-		std::string b = "Using Basic AI (A2 mandatory part).";
 		std::string a = "Using Advance AI (A2 creative part, option #1).";
-		debugging.is_advance_ai = !debugging.is_advance_ai;
-		printf("%s\n", debugging.is_advance_ai ? a.c_str() : b.c_str());
+		debugging.is_advance_ai = true;
+		printf("%s\n", a.c_str());
 	}
 
 	int FRAME_CHANGE = 10;
