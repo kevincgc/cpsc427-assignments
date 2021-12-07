@@ -2,6 +2,9 @@ Kevin Cai
 41146127
 Compiled with VS2019 Community on Windows.
 
+Note: I have disabled the water distortion shader so it is easier to see precise entity/entity and entity/boundary collisions. Uncomment
+lines 16-21 in shaders/water.fs.glsl to re-enable it.
+
 2.a + b) Pebbles are generated with random initial direction and velocity at the salmon's location every 0.5s.
 
 2.c) Pebbles have its mass calculated from its volume using 4/3*pi*r^3 and density of 2000kg/m^3, with 50 pixels/m.

@@ -13,9 +13,6 @@ vec2 distort(vec2 uv)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// DONE A1: HANDLE THE WATER WAVE DISTORTION HERE (you may want to try sin/cos)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//uv[0] = uv[0] * ((sin(time / 8.f) + 13.f) / 14.f) * ((cos(texcoord[0] / 200.f) + 24.f) / 25.f);
-	//uv[1] = uv[1] * ((sin(time / 8.f) + 10.f) / 11.f) * ((sin(texcoord[1] / 200.f) + 24.f) / 25.f);
-	//bool time_mod = false;
 //	float a = time;
 //	float b = 300.f;
 //	int d = int(a/b) % 2;
